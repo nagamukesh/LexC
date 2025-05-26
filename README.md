@@ -1,36 +1,36 @@
-# Lexical Analyzer and Parser with Memory Management
+# Advanced C Compiler with Custom Memory Management
 
-A C-based lexical analyzer and parser implementation with custom memory management. This project provides detailed symbol table tracking, constant table management, and a visual abstract syntax tree (AST) representation.
+A sophisticated C compiler implementation featuring lexical analysis, parsing, and custom memory management with comprehensive debugging and sanitization capabilities.
 
-## Features
+## Core Features
 
-- **Lexical Analysis**: Tokenizes C code using Flex
-- **Parsing**: Generates AST using Yacc/Bison
-- **Symbol Table Management**: Tracks identifiers, types, scopes, and line numbers
-- **Constant Table**: Manages string and numeric constants
-- **Custom Memory Management**: Efficient memory pool with reference counting
-- **Beautiful Output Format**: Well-formatted tables and tree visualization
+### 1. Compiler Components
+- **Lexical Analyzer**: Built with Flex for efficient token recognition
+- **Parser**: Implemented using Yacc/Bison for syntax analysis
+- **Symbol Table**: Advanced tracking of identifiers, types, scopes, and line numbers
+- **Constant Table**: Efficient management of string and numeric constants
+- **Abstract Syntax Tree (AST)**: Visual representation of code structure
+- **Custom Memory Management**: Pool-based allocation with reference counting
 
-## Build Instructions
+### 2. Memory Management System
 
-```bash
-make clean   # Clean previous build
-make        # Build the compiler
-```
+#### Architecture
+- **Memory Pool**: Pre-allocated memory space for efficient allocation
+- **Reference Counting**: Tracks object lifetime and prevents memory leaks
+- **Block Headers**: Metadata tracking for each allocated block
+- **Free List**: Efficient reuse of freed memory blocks
 
-## Usage
+#### Key Features
+- Dynamic memory pool initialization
+- Automatic memory cleanup
+- Memory usage statistics
+- Peak memory tracking
+- Reference count management
+- Memory leak prevention
 
-1. Create your C source file (e.g., test1.c)
-2. Run the compiler:
-```bash
-./compiler
-```
+### 3. Output Format
 
-## Output Format
-
-The compiler generates three main sections of output:
-
-### 1. Symbol Table
+#### Symbol Table Display
 ```
 ┌────────────┬──────────┬──────────┬───────────┬──────────┐
 │ SYMBOL     │ TYPE     │ CLASS    │ SCOPE     │ LINE     │
@@ -39,7 +39,7 @@ The compiler generates three main sections of output:
 └────────────┴──────────┴──────────┴───────────┴──────────┘
 ```
 
-### 2. Constant Table
+#### Constant Table Display
 ```
 ┌────────────────────────┬────────────────────────┐
 │ CONSTANT               │ TYPE                   │
@@ -48,17 +48,7 @@ The compiler generates three main sections of output:
 └────────────────────────┴────────────────────────┘
 ```
 
-### 3. Abstract Syntax Tree
-```
-├── root
-│   ├── child1
-│   │   ├── subchild1
-│   │   └── subchild2
-│   └── child2
-        └── subchild3
-```
-
-### 4. Memory Statistics
+#### Memory Statistics
 ```
 ╔════════════════════════════════════╗
 ║      Memory Pool Statistics        ║
@@ -70,38 +60,147 @@ The compiler generates three main sections of output:
 ╚════════════════════════════════════╝
 ```
 
-## Memory Management
+## Building and Running
 
-The project uses a custom memory management system with the following features:
-- Memory pool allocation
-- Reference counting
-- Automatic cleanup
-- Memory usage tracking
-- Peak memory monitoring
+### Standard Build
+```bash
+make clean   # Clean previous build artifacts
+make        # Build the compiler
+```
 
-## Files
+### Debug Builds
 
-- `final_lexer.l`: Flex lexical analyzer definition
-- `final_parser.y`: Yacc/Bison parser definition
-- `custom_memory.c`: Memory management implementation
-- `custom_memory.h`: Memory management header
-- `Makefile`: Build configuration
+1. **Address Sanitizer (ASan)**
+```bash
+make debug
+ASAN_OPTIONS=detect_leaks=1:print_stacktrace=1 ./compiler
+```
 
-## Error Handling
+2. **Memory Leak Check**
+```bash
+make memcheck
+```
 
-The compiler provides clear error messages for:
-- Syntax errors
-- Memory allocation failures
-- Invalid token errors
-- Parse errors
+3. **Thread Sanitizer**
+```bash
+make thread
+```
+
+4. **Undefined Behavior Detection**
+```bash
+make undefined
+```
+
+## Memory Analysis and Debugging
+
+### Address Sanitizer Features
+
+1. **Memory Error Detection**
+   - Buffer overflows (stack, heap, global)
+   - Use-after-free
+   - Use-after-return
+   - Use-after-scope
+   - Double-free
+   - Memory leaks
+   - Initialization issues
+
+2. **How It Works**
+   - Instruments memory accesses at compile time
+   - Maintains shadow memory to track memory state
+   - Checks every memory operation for validity
+   - Provides detailed error reports with stack traces
+
+### Example Error Detection
+
+1. **Buffer Overflow**
+```c
+char *array = malloc(10);
+strcpy(array, "This is too long");  // ASan will detect this
+```
+
+2. **Use After Free**
+```c
+int *ptr = malloc(sizeof(int));
+free(ptr);
+*ptr = 42;  // ASan will detect this
+```
+
+3. **Memory Leak**
+```c
+int *leak = malloc(sizeof(int));
+// No free - ASan will report leak
+```
+
+### Debugging Output
+
+ASan provides detailed error reports including:
+- Error type and location
+- Stack trace of the error
+- Allocation/deallocation history
+- Memory state visualization
+- Shadow memory mapping
+
+## Custom Memory Management Details
+
+### Memory Pool
+- Pre-allocated large memory block
+- Reduces system call overhead
+- Enables efficient memory reuse
+
+### Block Structure
+```c
+struct BlockHeader {
+    size_t size;         // Size of the block
+    int ref_count;       // Reference counter
+    struct BlockHeader *next_free;  // Free list pointer
+};
+```
+
+### Memory Operations
+1. **Allocation**
+   - Search free list for suitable block
+   - Split blocks if necessary
+   - Update metadata and statistics
+
+2. **Deallocation**
+   - Decrease reference count
+   - Merge adjacent free blocks
+   - Add to free list when ref_count = 0
+
+3. **Reference Counting**
+   - Track object usage
+   - Automatic cleanup when no references remain
+   - Prevents memory leaks
+
+## Best Practices
+
+### Memory Management
+1. Always initialize the memory pool before use
+2. Check allocation return values
+3. Properly maintain reference counts
+4. Clean up memory pool on program exit
+
+### Debugging
+1. Use ASan for development builds
+2. Enable stack traces for detailed error reports
+3. Monitor memory statistics
+4. Regular memory leak checks
 
 ## Dependencies
 
-- Flex (for lexical analysis)
-- Bison (for parsing)
-- GCC (for compilation)
-- Make (for build automation)
+- **Flex**: Lexical analyzer generator
+- **Bison**: Parser generator
+- **GCC**: C compiler with sanitizer support
+- **Make**: Build automation
 
 ## License
 
 This project is open source and available under the MIT License.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+4. Ensure tests pass
+5. Update documentation
