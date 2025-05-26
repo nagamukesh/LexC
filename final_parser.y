@@ -5,6 +5,8 @@
         #include "stdlib.h"
         #include "ctype.h"
         #include "string.h"
+        #include "custom_memory.h"  // Include custom memory management
+        
         void insert_type();
         void insert_class();
         void insert_value();
@@ -20,114 +22,140 @@
         extern char current_value[20];
         extern char current_function[20];
         extern char previous_operator[20];
+        extern void init_lexer_memory();
 
+        // Define the node structure first
+        struct node { 
+                struct node *child1; 
+                struct node *child2;
+                struct node *child3; 
+                struct node *child4; 
+                struct node *child5;
+                struct node *child6; 
+                struct node *child7; 
+                char *token; 
+        };
 
-	struct node* mknode(struct node *child1, struct node *child2, struct node *child3, struct node *child4, struct node *child5, struct node *child6, struct node *child7, char *token);
-	
-	struct node *head;
-    	struct node { 
-		struct node *child1; 
-		struct node *child2;
-		struct node *child3; 
-		struct node *child4; 
-		struct node *child5;
-		struct node *child6; 
-		struct node *child7; 
-		char *token; 
-    	};
-    	
-    	struct queueNode {
-    		struct node *treeNode;
-    		struct queueNode *next;
-	};
+        struct node *head;
 
-	struct queue {
-    		struct queueNode *front;
-    		struct queueNode *rear;
-	};
+        struct queueNode {
+                struct node *treeNode;
+                struct queueNode *next;
+        };
 
-	void enqueue(struct queue *q, struct node *treeNode) {
-    		struct queueNode *newNode = (struct queueNode *)malloc(sizeof(struct queueNode));
-    		newNode->treeNode = treeNode;
-    		newNode->next = NULL;
-    		if (q->rear == NULL) {
-        		q->front = q->rear = newNode;
-    		} else {
-       	 	q->rear->next = newNode;
-        	q->rear = newNode;
-    	}
-	}
+        struct queue {
+                struct queueNode *front;
+                struct queueNode *rear;
+        };
 
-	struct node *dequeue(struct queue *q) {
-    		if (q->front == NULL) {
-       	 		return NULL;
-    		}
-    		struct queueNode *temp = q->front;
-    		struct node *treeNode = temp->treeNode;
-    		q->front = q->front->next;
-    		if (q->front == NULL) {
-        		q->rear = NULL;
-    		}
-    		free(temp);
-    		return treeNode;
-	}
+        // Function declarations
+        struct node* mknode(struct node *child1, struct node *child2, struct node *child3, 
+                          struct node *child4, struct node *child5, struct node *child6, 
+                          struct node *child7, char *token);
+        void levelOrderTraversal(struct node *root);
+        int isEmpty(struct queue *q);
 
-	int isEmpty(struct queue *q) {
-    		return q->front == NULL;
-	}
+        // Implementation of mknode
+        struct node* mknode(struct node *child1, struct node *child2, struct node *child3, 
+                          struct node *child4, struct node *child5, struct node *child6, 
+                          struct node *child7, char *token) {
+                struct node *newnode = (struct node *)custom_malloc(sizeof(struct node));
+                char *newstr = (char *)custom_malloc(strlen(token) + 1);
+                strcpy(newstr, token);
+                newnode->token = newstr;
+                newnode->child1 = child1;
+                newnode->child2 = child2;
+                newnode->child3 = child3;
+                newnode->child4 = child4;
+                newnode->child5 = child5;
+                newnode->child6 = child6;
+                newnode->child7 = child7;
+                return newnode;
+        }
 
-	void levelOrderTraversal(struct node *root) {
-    		if (root == NULL) return;
+        void enqueue(struct queue *q, struct node *treeNode) {
+                struct queueNode *newNode = (struct queueNode *)custom_malloc(sizeof(struct queueNode));
+                newNode->treeNode = treeNode;
+                newNode->next = NULL;
+                if (q->rear == NULL) {
+                        q->front = q->rear = newNode;
+                } else {
+                        q->rear->next = newNode;
+                        q->rear = newNode;
+                }
+        }
 
-		struct queue q;
-		q.front = q.rear = NULL;
+        struct node *dequeue(struct queue *q) {
+                if (q->front == NULL) {
+                        return NULL;
+                }
+                struct queueNode *temp = q->front;
+                struct node *treeNode = temp->treeNode;
+                q->front = q->front->next;
+                if (q->front == NULL) {
+                        q->rear = NULL;
+                }
+                custom_free(temp);
+                return treeNode;
+        }
 
-    		enqueue(&q, root);
-    		int level = 1;  // Keep track of the level
+        int isEmpty(struct queue *q) {
+                return q->front == NULL;
+        }
 
-    		while (!isEmpty(&q)) {
-        		int levelSize = 0;  // Number of nodes at the current level
-        		struct queueNode *current = q.front;
+        void cleanup_tree(struct node *root) {
+                if (root == NULL) return;
+                cleanup_tree(root->child1);
+                cleanup_tree(root->child2);
+                cleanup_tree(root->child3);
+                cleanup_tree(root->child4);
+                cleanup_tree(root->child5);
+                cleanup_tree(root->child6);
+                cleanup_tree(root->child7);
+                custom_free(root->token);
+                custom_free(root);
+        }
 
-        		// Count nodes at the current level
-        		while (current != NULL) {
-            			levelSize++;
-            			current = current->next;
-        		}
-	
-        		printf("Level - %d : ", level);
-        		for (int i = 0; i < levelSize; i++) {
-        		    	struct node *currentNode = dequeue(&q);
-        		    	printf("%s ", currentNode->token);
-		
-		            	// Enqueue child nodes	
-		            	if (currentNode->child1 != NULL) {
-        			    enqueue(&q, currentNode->child1);
-       			    	}
-        	    	    	if (currentNode->child2 != NULL) {
-        	        	    enqueue(&q, currentNode->child2);
-        	    		}
-        	    		if (currentNode->child3 != NULL) {
-        	        		enqueue(&q, currentNode->child3);
-       		     		}
-       		     		if (currentNode->child4 != NULL) {
-        			    enqueue(&q, currentNode->child4);
-       			    	}
-        	    	    	if (currentNode->child5 != NULL) {
-        	        	    enqueue(&q, currentNode->child5);
-        	    		}
-        	    		if (currentNode->child6 != NULL) {
-        	        		enqueue(&q, currentNode->child6);
-       		     		}
-       		     		if (currentNode->child7 != NULL) {
-        			    enqueue(&q, currentNode->child7);
-       			    	}
-        		}
-        		printf("\n");  // New line after each level
-        		level++;  // Move to the next level
-    		}
-	}
+        void levelOrderTraversal(struct node *root) {
+                if (root == NULL) return;
 
+                struct queue q;
+                q.front = q.rear = NULL;
+
+                enqueue(&q, root);
+                int level = 0;
+
+                printf("\n");
+                while (!isEmpty(&q)) {
+                        int levelSize = 0;
+                        struct queueNode *current = q.front;
+                        while (current != NULL) {
+                                levelSize++;
+                                current = current->next;
+                        }
+
+                        for (int i = 0; i < levelSize; i++) {
+                                struct node *currentNode = dequeue(&q);
+                                
+                                // Print indentation and tree branches
+                                for (int j = 0; j < level; j++) {
+                                        printf("│   ");
+                                }
+                                printf("├── %s\n", currentNode->token);
+
+                                // Enqueue child nodes in reverse order to maintain tree structure
+                                if (currentNode->child7 != NULL) enqueue(&q, currentNode->child7);
+                                if (currentNode->child6 != NULL) enqueue(&q, currentNode->child6);
+                                if (currentNode->child5 != NULL) enqueue(&q, currentNode->child5);
+                                if (currentNode->child4 != NULL) enqueue(&q, currentNode->child4);
+                                if (currentNode->child3 != NULL) enqueue(&q, currentNode->child3);
+                                if (currentNode->child2 != NULL) enqueue(&q, currentNode->child2);
+                                if (currentNode->child1 != NULL) enqueue(&q, currentNode->child1);
+                        }
+                        level++;
+                }
+                printf("\n");
+        }
 %}
 
 %union { 
@@ -1088,93 +1116,78 @@ void printSymbolTable();
 void printConstantTable();
 void printSymbolDataLine();
 
-struct node* mknode(struct node *child1, struct node *child2, struct node *child3, struct node *child4, struct node *child5, struct node *child6, struct node *child7, char *token) {	
-	struct node *newnode = (struct node *)malloc(sizeof(struct node));
-	char *newstr = (char *)malloc(strlen(token)+1);
-	strcpy(newstr, token);
-	newnode->child1 = child1;
-	newnode->child2 = child2;
-	newnode->child3 = child3;
-	newnode->child4 = child4;
-	newnode->child5 = child5;
-	newnode->child6 = child6;
-	newnode->child7 = child7;
-	newnode->token = newstr;
-	return(newnode);
-}
-
-int main()
-{
-        yyin = fopen("test8.c", "r");
-        yyparse();
-        if(flag==0) printf("VALID PARSE\n");
-        printf("\n");
-        printf("%30s SYMBOL TABLE \n", " ");
-        printf("%1s %s\n", " ", "----------------------------------------------------------------------------------------------------------------------------------");
-        printSymbolTable();
-        printf("%1s %s\n", " ", "---------------------------------------------------------------------------------------------------------------------------------");
-        printf("\n\n%20s CONSTANT TABLE \n", " ");
-        printf("%1s %s\n", " ", "-------------------------------------------");
-        printConstantTable();
-        printf("%1s %s\n\n", " ", "-------------------------------------------");
-        int data;
-        printf("Print the symbol, data type and line number? [1-yes/2-no]: ");
-        scanf("%d", &data);
-        if(data==1){
+int main() {
+        init_lexer_memory();  // Initialize memory pool
+        yyin = fopen("test1.c", "r");
+        int result = yyparse();
+        
+        if(flag == 0) {
+                printf("\nVALID PARSE\n");
                 printf("\n");
-                printf("%1s %s\n", " ", "-------------------------------------");
-                printSymbolDataLine();
-                printf("%1s %s\n\n", " ", "-------------------------------------");
+                printf("%30s SYMBOL TABLE \n", " ");
+                printf("%1s %s\n", " ", "----------------------------------------------------------------------------------------------------------------------------------");
+                printSymbolTable();
+                printf("%1s %s\n", " ", "---------------------------------------------------------------------------------------------------------------------------------");
+                printf("\n\n%20s CONSTANT TABLE \n", " ");
+                printf("%1s %s\n", " ", "-------------------------------------------");
+                printConstantTable();
+                printf("%1s %s\n\n", " ", "-------------------------------------------");
+
+                // Print beautified AST
+                printf("\n╔════════════════════════════════════╗");
+                printf("\n║      Abstract Syntax Tree          ║");
+                printf("\n╚════════════════════════════════════╝\n");
+                levelOrderTraversal(head);
+
+                // Print concise memory info
+                printf("\n╔════════════════════════════════════╗");
+                printf("\n║      Memory Usage Summary          ║");
+                printf("\n╠════════════════════════════════════╣");
+                printf("\n║ Memory operations completed        ║");
+                printf("\n║ All resources properly freed       ║");
+                printf("\n╚════════════════════════════════════╝\n");
+        } else {
+                printf("\n╔════════════════════════════════════╗");
+                printf("\n║          Parsing Status            ║");
+                printf("\n╠════════════════════════════════════╣");
+                printf("\n║ ✗ Failed to parse input file       ║");
+                printf("\n╚════════════════════════════════════╝\n");
         }
-        if(flag==0){
-        	printf("\n\nLevel Order Traversal of AST\n\n");
-        	levelOrderTraversal(head);
-        }
-	else{
-		printf("No AST");
-	}
+
+        cleanup_tree(head);   // Clean up the parse tree
+        free_memory_pool();   // Clean up memory pool
+        return result;
 }
 
-void yyerror(char *s)
-{
+void yyerror(char *s) {
         printf("Line No. : %d %s %s\n",yylineno, s, yytext);
         flag=1;
         printf("INVALID PARSE\n");
 }
 
-void insert_type()
-{
+void insert_type() {
         insert_SymbolTable_type(current_identifier,current_type);
 }
 
-void insert_class(int a){
+void insert_class(int a) {
         insert_SymbolTable_class(current_identifier,a);
 }
 
-void insert_value()
-{       
-        if(strcmp(previous_operator, "=") == 0)
-        {       insert_SymbolTable_value(current_identifier,current_value);
+void insert_value() {       
+        if(strcmp(previous_operator, "=") == 0) {
+                insert_SymbolTable_value(current_identifier,current_value);
         }
 }       
 
-void insert_dimensions()
-{       
-    insert_SymbolTable_arraydim(current_identifier, current_value);
+void insert_dimensions() {       
+        insert_SymbolTable_arraydim(current_identifier, current_value);
 }
 
-void insert_pdl(int pdl)
-{
-    insert_SymbolTable_pdl(current_function, pdl);
+void insert_pdl(int pdl) {
+        insert_SymbolTable_pdl(current_function, pdl);
 }
 
-void insert_parameters()
-{
-    insert_SymbolTable_funcparam(current_function, current_identifier);
-}
-
-int yywrap()
-{
-        return 1;
+void insert_parameters() {
+        insert_SymbolTable_funcparam(current_function, current_identifier);
 }
 

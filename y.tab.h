@@ -85,36 +85,57 @@ extern int yydebug;
     TYPEDEF = 286,                 /* TYPEDEF  */
     UNION = 287,                   /* UNION  */
     VOLATILE = 288,                /* VOLATILE  */
-    integer_constant = 289,        /* integer_constant  */
-    string_constant = 290,         /* string_constant  */
-    float_constant = 291,          /* float_constant  */
-    character_constant = 292,      /* character_constant  */
-    RIGHT_ASSIGN = 293,            /* RIGHT_ASSIGN  */
-    LEFT_ASSIGN = 294,             /* LEFT_ASSIGN  */
-    AND_ASSIGN = 295,              /* AND_ASSIGN  */
-    XOR_ASSIGN = 296,              /* XOR_ASSIGN  */
-    OR_ASSIGN = 297,               /* OR_ASSIGN  */
-    RIGHT_OP = 298,                /* RIGHT_OP  */
-    LEFT_OP = 299,                 /* LEFT_OP  */
-    PTR_OP = 300,                  /* PTR_OP  */
-    ELSE = 301,                    /* ELSE  */
-    MOD_EQUAL = 302,               /* MOD_EQUAL  */
-    MUL_EQUAL = 303,               /* MUL_EQUAL  */
-    DIV_EQUAL = 304,               /* DIV_EQUAL  */
-    ADD_EQUAL = 305,               /* ADD_EQUAL  */
-    SUB_EQUAL = 306,               /* SUB_EQUAL  */
-    OR_OP = 307,                   /* OR_OP  */
-    AND_OP = 308,                  /* AND_OP  */
-    EQUAL = 309,                   /* EQUAL  */
-    NOT_EQUAL = 310,               /* NOT_EQUAL  */
-    LESSER_EQUAL = 311,            /* LESSER_EQUAL  */
-    LESSER = 312,                  /* LESSER  */
-    GREATER_EQUAL = 313,           /* GREATER_EQUAL  */
-    GREATER = 314,                 /* GREATER  */
-    SIZEOF = 315,                  /* SIZEOF  */
-    NOT = 316,                     /* NOT  */
-    INCREMENT = 317,               /* INCREMENT  */
-    DECREMENT = 318                /* DECREMENT  */
+    OPEN_CURLY = 289,              /* OPEN_CURLY  */
+    CLOSE_CURLY = 290,             /* CLOSE_CURLY  */
+    SEMI_COLON = 291,              /* SEMI_COLON  */
+    COMMA = 292,                   /* COMMA  */
+    COLON = 293,                   /* COLON  */
+    EQUALS = 294,                  /* EQUALS  */
+    OPEN_BRACE = 295,              /* OPEN_BRACE  */
+    CLOSE_BRACE = 296,             /* CLOSE_BRACE  */
+    OPEN_SQR = 297,                /* OPEN_SQR  */
+    CLOSE_SQR = 298,               /* CLOSE_SQR  */
+    DOT = 299,                     /* DOT  */
+    AND = 300,                     /* AND  */
+    NOT = 301,                     /* NOT  */
+    TILD = 302,                    /* TILD  */
+    HYPHEN = 303,                  /* HYPHEN  */
+    PLUS = 304,                    /* PLUS  */
+    MULTIPLY = 305,                /* MULTIPLY  */
+    DIVIDE = 306,                  /* DIVIDE  */
+    PERCENT = 307,                 /* PERCENT  */
+    POWER = 308,                   /* POWER  */
+    OR = 309,                      /* OR  */
+    QUESTION = 310,                /* QUESTION  */
+    integer_constant = 311,        /* integer_constant  */
+    string_constant = 312,         /* string_constant  */
+    float_constant = 313,          /* float_constant  */
+    character_constant = 314,      /* character_constant  */
+    RIGHT_ASSIGN = 315,            /* RIGHT_ASSIGN  */
+    LEFT_ASSIGN = 316,             /* LEFT_ASSIGN  */
+    AND_ASSIGN = 317,              /* AND_ASSIGN  */
+    XOR_ASSIGN = 318,              /* XOR_ASSIGN  */
+    OR_ASSIGN = 319,               /* OR_ASSIGN  */
+    RIGHT_OP = 320,                /* RIGHT_OP  */
+    LEFT_OP = 321,                 /* LEFT_OP  */
+    PTR_OP = 322,                  /* PTR_OP  */
+    ELSE = 323,                    /* ELSE  */
+    MOD_EQUAL = 324,               /* MOD_EQUAL  */
+    MUL_EQUAL = 325,               /* MUL_EQUAL  */
+    DIV_EQUAL = 326,               /* DIV_EQUAL  */
+    ADD_EQUAL = 327,               /* ADD_EQUAL  */
+    SUB_EQUAL = 328,               /* SUB_EQUAL  */
+    OR_OP = 329,                   /* OR_OP  */
+    AND_OP = 330,                  /* AND_OP  */
+    EQUAL = 331,                   /* EQUAL  */
+    NOT_EQUAL = 332,               /* NOT_EQUAL  */
+    LESSER_EQUAL = 333,            /* LESSER_EQUAL  */
+    LESSER = 334,                  /* LESSER  */
+    GREATER_EQUAL = 335,           /* GREATER_EQUAL  */
+    GREATER = 336,                 /* GREATER  */
+    SIZEOF = 337,                  /* SIZEOF  */
+    INCREMENT = 338,               /* INCREMENT  */
+    DECREMENT = 339                /* DECREMENT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -154,46 +175,70 @@ extern int yydebug;
 #define TYPEDEF 286
 #define UNION 287
 #define VOLATILE 288
-#define integer_constant 289
-#define string_constant 290
-#define float_constant 291
-#define character_constant 292
-#define RIGHT_ASSIGN 293
-#define LEFT_ASSIGN 294
-#define AND_ASSIGN 295
-#define XOR_ASSIGN 296
-#define OR_ASSIGN 297
-#define RIGHT_OP 298
-#define LEFT_OP 299
-#define PTR_OP 300
-#define ELSE 301
-#define MOD_EQUAL 302
-#define MUL_EQUAL 303
-#define DIV_EQUAL 304
-#define ADD_EQUAL 305
-#define SUB_EQUAL 306
-#define OR_OP 307
-#define AND_OP 308
-#define EQUAL 309
-#define NOT_EQUAL 310
-#define LESSER_EQUAL 311
-#define LESSER 312
-#define GREATER_EQUAL 313
-#define GREATER 314
-#define SIZEOF 315
-#define NOT 316
-#define INCREMENT 317
-#define DECREMENT 318
+#define OPEN_CURLY 289
+#define CLOSE_CURLY 290
+#define SEMI_COLON 291
+#define COMMA 292
+#define COLON 293
+#define EQUALS 294
+#define OPEN_BRACE 295
+#define CLOSE_BRACE 296
+#define OPEN_SQR 297
+#define CLOSE_SQR 298
+#define DOT 299
+#define AND 300
+#define NOT 301
+#define TILD 302
+#define HYPHEN 303
+#define PLUS 304
+#define MULTIPLY 305
+#define DIVIDE 306
+#define PERCENT 307
+#define POWER 308
+#define OR 309
+#define QUESTION 310
+#define integer_constant 311
+#define string_constant 312
+#define float_constant 313
+#define character_constant 314
+#define RIGHT_ASSIGN 315
+#define LEFT_ASSIGN 316
+#define AND_ASSIGN 317
+#define XOR_ASSIGN 318
+#define OR_ASSIGN 319
+#define RIGHT_OP 320
+#define LEFT_OP 321
+#define PTR_OP 322
+#define ELSE 323
+#define MOD_EQUAL 324
+#define MUL_EQUAL 325
+#define DIV_EQUAL 326
+#define ADD_EQUAL 327
+#define SUB_EQUAL 328
+#define OR_OP 329
+#define AND_OP 330
+#define EQUAL 331
+#define NOT_EQUAL 332
+#define LESSER_EQUAL 333
+#define LESSER 334
+#define GREATER_EQUAL 335
+#define GREATER 336
+#define SIZEOF 337
+#define INCREMENT 338
+#define DECREMENT 339
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 26 "parser.y"
+#line 161 "final_parser.y"
+ 
+	struct var_name { 
+		char name[100]; 
+		struct node* nd;
+	} nd_obj; 
 
-    char* string;
-
-#line 197 "y.tab.h"
+#line 242 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -322,6 +322,9 @@ void yyfree ( void *  );
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
 /* Begin user sect3 */
+
+#define yywrap() (/*CONSTCOND*/1)
+#define YY_SKIP_YYWRAP
 typedef flex_uint8_t YY_CHAR;
 
 FILE *yyin = NULL, *yyout = NULL;
@@ -662,213 +665,221 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "lexer.l"
-#line 2 "lexer.l"
+#line 1 "final_lexer.l"
+#line 2 "final_lexer.l"
 #include <stdio.h>
 #include <string.h>
 #include "y.tab.h"
+#include "custom_memory.h"  // Include custom memory management
 
 extern void yyerror(const char *);
 extern int yylineno;
 int curly_count=0;
 
+// Initialize memory pool at the start
+void init_lexer_memory() {
+    init_memory_pool(64 * 1024 * 1024); // Initialize with 64MB
+}
+
 #define TABLE_SIZE 1000
 
 struct ConstantTable{
-		char constant_name[100];
-		char constant_type[100];
-		int exist;
-	}CT[TABLE_SIZE];
-	
-struct SymbolTable{
-		char symbol_name[100];
-		char symbol_type[100];
-        	char array_dimensions[100];
-		char class[100];
-        	char value[100];
-        	char parameters[100];
-		char pdl[100];
-        	int line_number;
-		int exist;
-		int nesting_level;
-	}ST[TABLE_SIZE];
+                char constant_name[100];
+                char constant_type[100];
+                int exist;
+        }CT[TABLE_SIZE];
 
-int search_ConstantTable(char* str) { 
-for (int i = 0; i < TABLE_SIZE; i++) { 
-if (CT[i].exist == 1 && strcmp(CT[i].constant_name, str) == 0) { 
+struct SymbolTable{
+                char symbol_name[100];
+                char symbol_type[100];
+                char array_dimensions[100];
+                char class[100];
+                char value[100];
+                char parameters[100];
+                char pdl[100];
+                int line_number;
+                int exist;
+                int nesting_level;
+        }ST[TABLE_SIZE];
+
+int search_ConstantTable(char* str) {
+for (int i = 0; i < TABLE_SIZE; i++) {
+if (CT[i].exist == 1 && strcmp(CT[i].constant_name, str) == 0) {
 return 1;
- 	} 
-} 
-return 0; 
+        }
+}
+return 0;
 }
 
-int search_SymbolTable(char* str) { 
-for (int i = 0; i < TABLE_SIZE; i++) { 
-if (ST[i].exist == 1 && strcmp(ST[i].symbol_name, str) == 0) { 
+int search_SymbolTable(char* str) {
+for (int i = 0; i < TABLE_SIZE; i++) {
+if (ST[i].exist == 1 && strcmp(ST[i].symbol_name, str) == 0) {
 return 1;
- 	} 
-} 
-return 0; 
+        }
+}
+return 0;
 }
 
 void insert_ConstantTable(char* name, char* type){
-	 if(search_ConstantTable(name))
-		return;
-		
-	for (int i = 0; i < TABLE_SIZE; i++) {
-		if(CT[i].exist == 0){
-			strcpy(CT[i].constant_name, name);
-			strcpy(CT[i].constant_type, type);
-			CT[i].exist = 1;
-			return;
-		}
-	}
-	printf("Error: Constant table is full.\n");
+         if(search_ConstantTable(name))
+                return;
+
+        for (int i = 0; i < TABLE_SIZE; i++) {
+                if(CT[i].exist == 0){
+                        strcpy(CT[i].constant_name, name);
+                        strcpy(CT[i].constant_type, type);
+                        CT[i].exist = 1;
+                        return;
+                }
+        }
+        printf("Error: Constant table is full.\n");
 }
 
-	void insert_SymbolTable(char* name, char* type){
-	 	if(search_SymbolTable(name))
-			return;
-		
-		for (int i = 0; i < TABLE_SIZE; i++) {
-			if(ST[i].exist == 0){
-				strcpy(ST[i].symbol_name, name);
-				strcpy(ST[i].symbol_type, type);
-				strcpy(ST[i].parameters, "No parameters");
-				strcpy(ST[i].array_dimensions, "No dimensions");
-				ST[i].line_number=yylineno;
-				ST[i].nesting_level=curly_count;
-				strcpy(ST[i].pdl, "Not a function");
-				ST[i].exist = 1;
-				return;
-			}
-		}
-		printf("Error: Symbol table is full.\n");
-	}
+        void insert_SymbolTable(char* name, char* type){
+                if(search_SymbolTable(name))
+                        return;
 
-	void insert_SymbolTable_type(char *str1, char *str2)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
-		{
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				strcpy(ST[i].symbol_type,str2);
-			}
-		}
+                for (int i = 0; i < TABLE_SIZE; i++) {
+                        if(ST[i].exist == 0){
+                                strcpy(ST[i].symbol_name, name);
+                                strcpy(ST[i].symbol_type, type);
+                                strcpy(ST[i].array_dimensions, "No dimensions");
+                                ST[i].line_number=yylineno;
+                                ST[i].nesting_level=curly_count;
+                                strcpy(ST[i].pdl, "Not a function");
+                                strcpy(ST[i].parameters, "No parameters");
+                                ST[i].exist = 1;
+                                return;
+                        }
+                }
+                printf("Error: Symbol table is full.\n");
+        }
+
+        void insert_SymbolTable_type(char *str1, char *str2)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
+                {
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                strcpy(ST[i].symbol_type,str2);
+                        }
+                }
     }
 
-	void insert_SymbolTable_class(char *str1, int a){
-		for(int i=0;i<TABLE_SIZE;i++){
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				if(a==0){
-					strcpy(ST[i].class,"STRUCTURE");
-				}
-				else if(a==1){
-					strcpy(ST[i].class,"FUNCTION");
-				}
-				else if(a==2){
-					strcpy(ST[i].class,"VARIABLE");
-				}
-			}
-		}
-	}
+        void insert_SymbolTable_class(char *str1, int a){
+                for(int i=0;i<TABLE_SIZE;i++){
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                if(a==0){
+                                        strcpy(ST[i].class,"STRUCTURE");
+                                }
+                                else if(a==1){
+                                        strcpy(ST[i].class,"FUNCTION");
+                                }
+                                else if(a==2){
+                                        strcpy(ST[i].class,"VARIABLE");
+                                }
+                        }
+                }
+        }
 
-	void insert_SymbolTable_value(char *str1, char *str2)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
-		{
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				strcpy(ST[i].value,str2);
-			}
-		}
-	}
+        void insert_SymbolTable_value(char *str1, char *str2)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
+                {
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                strcpy(ST[i].value,str2);
+                        }
+                }
+        }
 
-    	void insert_SymbolTable_arraydim(char *str1, char *dim)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
-		{
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				strcpy(ST[i].array_dimensions,dim);
-			}
-		}
-	}
-	
-	void insert_SymbolTable_pdl(char *str1, int pdl)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
+        void insert_SymbolTable_arraydim(char *str1, char *dim)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
+                {
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                strcpy(ST[i].array_dimensions,dim);
+                        }
+                }
+        }
+
+        void insert_SymbolTable_pdl(char *str1, int pdl)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
                 {
                         if(strcmp(ST[i].symbol_name,str1)==0)
                         {
                                 if(pdl==0) strcpy(ST[i].pdl, "Defined");
-				else if(pdl==1) strcpy(ST[i].pdl, "Declared");
+                                else if(pdl==1) strcpy(ST[i].pdl, "Declared");
                         }
-                }
-	}
-
-    	void insert_SymbolTable_funcparam(char *str1, char *param)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
-		{
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				strcpy(ST[i].parameters,"  ");
-                strcat(ST[i].parameters,param);
-			}
-		}
-	}
-
-	void insert_SymbolTable_line(char *str1, int line)
-	{
-		for(int i = 0 ; i < TABLE_SIZE ; i++)
-		{
-			if(strcmp(ST[i].symbol_name,str1)==0)
-			{
-				ST[i].line_number = line;
-			}
-		}
-	}
-
-	void printConstantTable(){
-		printf("| %20s | %20s |\n", "CONSTANT","TYPE");
-		for(int i = 0; i < TABLE_SIZE; ++i){
-			if(CT[i].exist == 0)
-				continue;
-				
-			printf("| %20s | %20s |\n", CT[i].constant_name, CT[i].constant_type);
-		}
-	}
-
-	void printSymbolTable(){
-        printf("| %10s | %10s | %18s | %15s | %10s | %30s | %10s |\n","SYMBOL NAME", "TYPE", "CLASS","DIMENSIONS","PARAMETERS","PROCEDURE DEFINITION LANGUAGE","NESTING_LEVEL");
-		for(int i = 0; i < TABLE_SIZE; ++i){
-			if(ST[i].exist == 0)
-				continue;
-			printf("| %11s | %10s | %18s | %15s | %10s | %30s |            %d  |\n", ST[i].symbol_name, ST[i].symbol_type, ST[i].class,ST[i].array_dimensions,ST[i].parameters,ST[i].pdl, ST[i].nesting_level);
-		}
-	}
-
-	void printSymbolDataLine(){
-        printf("| %10s |  %10s | %10s |\n","SYMBOL", "TYPE","LINE NO");
-                for(int i = 0; i < TABLE_SIZE; ++i){
-                        if(ST[i].exist == 0)
-                                continue;
-                        printf("| %10s | %11s |        %d   |\n", ST[i].symbol_name, ST[i].symbol_type, ST[i].line_number);
                 }
         }
 
-	char current_identifier[20];
-	char current_type[20];
-	char current_value[20];
+        void insert_SymbolTable_funcparam(char *str1, char *param)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
+                {
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                strcpy(ST[i].parameters," ");
+                strcat(ST[i].parameters,param);
+                        }
+                }
+        }
+
+        void insert_SymbolTable_line(char *str1, int line)
+        {
+                for(int i = 0 ; i < TABLE_SIZE ; i++)
+                {
+                        if(strcmp(ST[i].symbol_name,str1)==0)
+                        {
+                                ST[i].line_number = line;
+                        }
+                }
+        }
+
+        void printConstantTable(){
+                printf("\n┌────────────────────────┬────────────────────────┐\n");
+                printf("│ %-20s │ %-20s │\n", "CONSTANT", "TYPE");
+                printf("├────────────────────────┼────────────────────────┤\n");
+                for(int i = 0; i < TABLE_SIZE; ++i){
+                        if(CT[i].exist == 0)
+                                continue;
+                        printf("│ %-20s │ %-20s │\n", CT[i].constant_name, CT[i].constant_type);
+                }
+                printf("└────────────────────────┴────────────────────────┘\n");
+        }
+
+        void printSymbolTable(){
+                printf("\n┌────────────┬──────────┬──────────┬───────────┬──────────┐\n");
+                printf("│ %-10s │ %-8s │ %-8s │ %-9s │ %-8s │\n", "SYMBOL", "TYPE", "CLASS", "SCOPE", "LINE");
+                printf("├────────────┼──────────┼──────────┼───────────┼──────────┤\n");
+                for(int i = 0; i < TABLE_SIZE; ++i){
+                        if(ST[i].exist == 0)
+                                continue;
+                        printf("│ %-10s │ %-8s │ %-8s │ %-9d │ %-8d │\n", 
+                               ST[i].symbol_name, 
+                               ST[i].symbol_type, 
+                               ST[i].class,
+                               ST[i].nesting_level,
+                               ST[i].line_number);
+                }
+                printf("└────────────┴──────────┴──────────┴───────────┴──────────┘\n");
+        }
+
+        char current_identifier[20];
+        char current_type[20];
+        char current_value[20];
         char current_function[20];
-	char previous_operator[20];
-	extern int flag;
+        char previous_operator[20];
+        extern int flag;
 
-#line 870 "lex.yy.c"
+#line 880 "lex.yy.c"
+#define YY_NO_INPUT 1
 
-#line 872 "lex.yy.c"
+#line 883 "lex.yy.c"
 
 #define INITIAL 0
 #define MLCOMMENT 1
@@ -929,8 +940,6 @@ extern int yywrap ( void );
 #endif
 
 #ifndef YY_NO_UNPUT
-    
-    static void yyunput ( int c, char *buf_ptr  );
     
 #endif
 
@@ -1086,14 +1095,14 @@ YY_DECL
 		}
 
 	{
-#line 214 "lexer.l"
+#line 225 "final_lexer.l"
 
 
-#line 217 "lexer.l"
-	int nested_count = 0;
-	int check_nested = 0;
+#line 228 "final_lexer.l"
+        int nested_count = 0;
+        int check_nested = 0;
 
-#line 1097 "lex.yy.c"
+#line 1106 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1152,505 +1161,505 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 220 "lexer.l"
+#line 231 "final_lexer.l"
 { }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 221 "lexer.l"
-{ } 
+#line 232 "final_lexer.l"
+{ }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 222 "lexer.l"
+#line 233 "final_lexer.l"
 { }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 224 "lexer.l"
+#line 235 "final_lexer.l"
 { BEGIN MLCOMMENT; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 225 "lexer.l"
-{ ++nested_count; 
-												check_nested = 1;
-											 }	
+#line 236 "final_lexer.l"
+{ ++nested_count;
+                                                                                                check_nested = 1;
+                                                                                         }      
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 228 "lexer.l"
+#line 239 "final_lexer.l"
 { if (nested_count) --nested_count;
-											   else{ if(check_nested){
-														check_nested = 0;
-														BEGIN INITIAL;
-														}
-													 else{
-														BEGIN INITIAL;
-													}
-											    } 
-											 }
+                                                                                           else{ if(check_nested){
+                                                                                                                check_nested = 0;
+                                                                                                                BEGIN INITIAL;
+                                                                                                                }
+                                                                                                         else{
+                                                                                                                BEGIN INITIAL;
+                                                                                                        }
+                                                                                            }
+                                                                                         }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 238 "lexer.l"
-; 
+#line 249 "final_lexer.l"
+;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 239 "lexer.l"
+#line 250 "final_lexer.l"
 ;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 240 "lexer.l"
+#line 251 "final_lexer.l"
 ;
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 241 "lexer.l"
+#line 252 "final_lexer.l"
 ;
 	YY_BREAK
 case YY_STATE_EOF(MLCOMMENT):
-#line 242 "lexer.l"
+#line 253 "final_lexer.l"
 { printf("Line No. %d ERROR: MULTI LINE COMMENT NOT CLOSED\n", yylineno); return 0;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 243 "lexer.l"
+#line 254 "final_lexer.l"
 { return AUTO; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 244 "lexer.l"
+#line 255 "final_lexer.l"
 { insert_SymbolTable_line(yytext, yylineno); insert_SymbolTable(yytext, "Keyword");  return BREAK;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 245 "lexer.l"
+#line 256 "final_lexer.l"
 { return BOOL; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 246 "lexer.l"
+#line 257 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return CASE;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 247 "lexer.l"
+#line 258 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword"); return CHAR;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 248 "lexer.l"
+#line 259 "final_lexer.l"
 { return CONST; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 249 "lexer.l"
+#line 260 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return CONTINUE;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 250 "lexer.l"
+#line 261 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return DEFAULT;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 251 "lexer.l"
+#line 262 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword"); return DO;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 252 "lexer.l"
+#line 263 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword"); return DOUBLE;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 253 "lexer.l"
+#line 264 "final_lexer.l"
 { insert_SymbolTable_line(yytext, yylineno); insert_SymbolTable(yytext, "Keyword"); return ELSE;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 254 "lexer.l"
+#line 265 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");return FLOAT;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 255 "lexer.l"
+#line 266 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword"); return FOR;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 256 "lexer.l"
+#line 267 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return GOTO;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 257 "lexer.l"
+#line 268 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword"); return IF;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 258 "lexer.l"
+#line 269 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");return INT;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 259 "lexer.l"
+#line 270 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");  return LONG;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 260 "lexer.l"
+#line 271 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return RETURN;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 261 "lexer.l"
+#line 272 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");  return SHORT;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 262 "lexer.l"
+#line 273 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");  return SIGNED;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 263 "lexer.l"
+#line 274 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return SIZEOF;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 264 "lexer.l"
+#line 275 "final_lexer.l"
 { return STATIC; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 265 "lexer.l"
+#line 276 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");  return STRUCT;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 266 "lexer.l"
+#line 277 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return SWITCH;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 267 "lexer.l"
+#line 278 "final_lexer.l"
 { return TYPEDEF; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 268 "lexer.l"
+#line 279 "final_lexer.l"
 { return UNION; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 269 "lexer.l"
+#line 280 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword");  return UNSIGNED;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 270 "lexer.l"
+#line 281 "final_lexer.l"
 { strcpy(current_type,yytext); insert_SymbolTable(yytext, "Keyword");  return VOID;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 271 "lexer.l"
+#line 282 "final_lexer.l"
 { return VOLATILE; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 272 "lexer.l"
+#line 283 "final_lexer.l"
 { insert_SymbolTable(yytext, "Keyword"); return WHILE;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 273 "lexer.l"
+#line 284 "final_lexer.l"
 { return RIGHT_ASSIGN; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 274 "lexer.l"
+#line 285 "final_lexer.l"
 { return LEFT_ASSIGN; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 275 "lexer.l"
+#line 286 "final_lexer.l"
 { return ADD_EQUAL; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 276 "lexer.l"
+#line 287 "final_lexer.l"
 { return SUB_EQUAL; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 277 "lexer.l"
+#line 288 "final_lexer.l"
 { return MUL_EQUAL; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 278 "lexer.l"
+#line 289 "final_lexer.l"
 { return DIV_EQUAL; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 279 "lexer.l"
+#line 290 "final_lexer.l"
 { return MOD_EQUAL; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 280 "lexer.l"
+#line 291 "final_lexer.l"
 { return AND_ASSIGN; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 281 "lexer.l"
+#line 292 "final_lexer.l"
 { return XOR_ASSIGN; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 282 "lexer.l"
+#line 293 "final_lexer.l"
 { return OR_ASSIGN; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 283 "lexer.l"
+#line 294 "final_lexer.l"
 { return RIGHT_OP; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 284 "lexer.l"
+#line 295 "final_lexer.l"
 { return LEFT_OP; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 285 "lexer.l"
+#line 296 "final_lexer.l"
 { return INCREMENT; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 286 "lexer.l"
+#line 297 "final_lexer.l"
 { return DECREMENT; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 287 "lexer.l"
+#line 298 "final_lexer.l"
 { return PTR_OP; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 288 "lexer.l"
+#line 299 "final_lexer.l"
 { return AND_OP; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 289 "lexer.l"
+#line 300 "final_lexer.l"
 { return OR_OP; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 290 "lexer.l"
+#line 301 "final_lexer.l"
 { return LESSER_EQUAL; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 291 "lexer.l"
+#line 302 "final_lexer.l"
 { return GREATER_EQUAL; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 292 "lexer.l"
+#line 303 "final_lexer.l"
 { return EQUAL; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 293 "lexer.l"
+#line 304 "final_lexer.l"
 { return NOT_EQUAL; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 294 "lexer.l"
-{ return ';'; }
+#line 305 "final_lexer.l"
+{ return SEMI_COLON; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 295 "lexer.l"
-{ curly_count++; return '{'; }
+#line 306 "final_lexer.l"
+{ curly_count++; return OPEN_CURLY; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 296 "lexer.l"
-{ return '{'; }
+#line 307 "final_lexer.l"
+{ return OPEN_CURLY; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 297 "lexer.l"
-{ curly_count--; return '}'; }
+#line 308 "final_lexer.l"
+{ curly_count--; return CLOSE_CURLY; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 298 "lexer.l"
-{ return '}'; }
+#line 309 "final_lexer.l"
+{ return CLOSE_CURLY; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 299 "lexer.l"
-{ return ','; }
+#line 310 "final_lexer.l"
+{ return COMMA; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 300 "lexer.l"
-{ return ':'; }
+#line 311 "final_lexer.l"
+{ return COLON; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 301 "lexer.l"
-{ return '='; }
+#line 312 "final_lexer.l"
+{ return EQUALS; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 302 "lexer.l"
-{ return '('; }
+#line 313 "final_lexer.l"
+{ return OPEN_BRACE; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 303 "lexer.l"
-{ return ')'; }
+#line 314 "final_lexer.l"
+{ return CLOSE_BRACE; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 304 "lexer.l"
-{ return '['; }
+#line 315 "final_lexer.l"
+{ return OPEN_SQR; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 305 "lexer.l"
-{ return ']'; }
+#line 316 "final_lexer.l"
+{ return CLOSE_SQR; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 306 "lexer.l"
-{ return '.'; }
+#line 317 "final_lexer.l"
+{ return DOT; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 307 "lexer.l"
-{ return '&'; }
+#line 318 "final_lexer.l"
+{ return AND; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 308 "lexer.l"
+#line 319 "final_lexer.l"
 { return NOT; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 309 "lexer.l"
-{ return '~'; }
+#line 320 "final_lexer.l"
+{ return TILD; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 310 "lexer.l"
-{ return '-'; }
+#line 321 "final_lexer.l"
+{ return HYPHEN; }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 311 "lexer.l"
-{ return '+'; }
+#line 322 "final_lexer.l"
+{ return PLUS; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 312 "lexer.l"
-{ return '*'; }
+#line 323 "final_lexer.l"
+{ return MULTIPLY; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 313 "lexer.l"
-{ return '/'; }
+#line 324 "final_lexer.l"
+{ return DIVIDE; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 314 "lexer.l"
-{ return '%'; }
+#line 325 "final_lexer.l"
+{ return PERCENT; }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 315 "lexer.l"
+#line 326 "final_lexer.l"
 { return LESSER; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 316 "lexer.l"
+#line 327 "final_lexer.l"
 { return GREATER; }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 317 "lexer.l"
-{ return '^'; }
+#line 328 "final_lexer.l"
+{ return POWER; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 318 "lexer.l"
-{ return '|'; }
+#line 329 "final_lexer.l"
+{ return OR; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 319 "lexer.l"
-{ return '?'; }
+#line 330 "final_lexer.l"
+{ return QUESTION; }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 320 "lexer.l"
+#line 331 "final_lexer.l"
 { /*whitespaces*/ }
 	YY_BREAK
 case 89:
 /* rule 89 can match eol */
 YY_RULE_SETUP
-#line 321 "lexer.l"
-{ yylineno++; } 
+#line 332 "final_lexer.l"
+{ yylineno++; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 322 "lexer.l"
-{ strcpy(current_value,yytext); insert_ConstantTable(yytext,"String Constant"); return string_constant;}    
+#line 333 "final_lexer.l"
+{ strcpy(current_value,yytext); insert_ConstantTable(yytext,"String Constant"); return string_constant;}
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 324 "lexer.l"
+#line 335 "final_lexer.l"
 { printf("Line No. %d ERROR: UNCLOSED STRING - %s\n", yylineno, yytext); return 0;}
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 326 "lexer.l"
+#line 337 "final_lexer.l"
 {strcpy(current_value,yytext); insert_ConstantTable(yytext,"Character Constant"); return character_constant;}
 	YY_BREAK
 case 93:
 /* rule 93 can match eol */
 YY_RULE_SETUP
-#line 328 "lexer.l"
+#line 339 "final_lexer.l"
 {printf("Line No. %d ERROR: NOT A CHARACTER - %s\n", yylineno, yytext); return 0; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 330 "lexer.l"
-{strcpy(current_value,yytext); insert_ConstantTable(yytext, "Floating Constant"); return float_constant;} 
+#line 341 "final_lexer.l"
+{strcpy(current_value,yytext); insert_ConstantTable(yytext, "Floating Constant"); return float_constant;}
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 332 "lexer.l"
+#line 343 "final_lexer.l"
 {strcpy(current_value,yytext); insert_ConstantTable(yytext, "Floating Constant"); return float_constant;}
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 334 "lexer.l"
+#line 345 "final_lexer.l"
 {strcpy(current_value,yytext); insert_ConstantTable(yytext, "Number Constant"); return integer_constant;}
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 336 "lexer.l"
+#line 347 "final_lexer.l"
 {strcpy(current_identifier,yytext);insert_SymbolTable(yytext,"Identifier");  return IDENTIFIER;}
 	YY_BREAK
 case 98:
@@ -1658,25 +1667,25 @@ case 98:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 338 "lexer.l"
+#line 349 "final_lexer.l"
 {strcpy(current_identifier,yytext);insert_SymbolTable(yytext,"Array Identifier");  return IDENTIFIER;}
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 341 "lexer.l"
+#line 352 "final_lexer.l"
 { flag = 1;
-					  if(yytext[0] == '#')
-					  printf("Line No. %d PREPROCESSOR ERROR - %s\n",yylineno, yytext);
-					  else
-					  printf("Line No. %d ERROR ILLEGAL CHARACTER - %s\n", yylineno, yytext);
-			                  return 0;}
+                                          if(yytext[0] == '#')
+                                          printf("Line No. %d PREPROCESSOR ERROR - %s\n",yylineno, yytext);
+                                          else
+                                          printf("Line No. %d ERROR ILLEGAL CHARACTER - %s\n", yylineno, yytext);
+                                          return 0;}
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 347 "lexer.l"
+#line 358 "final_lexer.l"
 ECHO;
 	YY_BREAK
-#line 1680 "lex.yy.c"
+#line 1689 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2011,43 +2020,6 @@ static int yy_get_next_buffer (void)
 }
 
 #ifndef YY_NO_UNPUT
-
-    static void yyunput (int c, char * yy_bp )
-{
-	char *yy_cp;
-    
-    yy_cp = (yy_c_buf_p);
-
-	/* undo effects of setting up yytext */
-	*yy_cp = (yy_hold_char);
-
-	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-		{ /* need to shift things up to make room */
-		/* +2 for EOB chars. */
-		int number_to_move = (yy_n_chars) + 2;
-		char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-		char *source =
-				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-
-		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-			*--dest = *--source;
-
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
-		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = (int) YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-
-		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-		}
-
-	*--yy_cp = (char) c;
-
-	(yytext_ptr) = yy_bp;
-	(yy_hold_char) = *yy_cp;
-	(yy_c_buf_p) = yy_cp;
-}
 
 #endif
 
@@ -2681,6 +2653,8 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 347 "lexer.l"
+#line 358 "final_lexer.l"
+
+
 
 

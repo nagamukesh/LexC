@@ -2,10 +2,16 @@
 #include <stdio.h>
 #include <string.h>
 #include "y.tab.h"
+#include "custom_memory.h"  // Include custom memory management
 
 extern void yyerror(const char *);
 extern int yylineno;
 int curly_count=0;
+
+// Initialize memory pool at the start
+void init_lexer_memory() {
+    init_memory_pool(64 * 1024 * 1024); // Initialize with 64MB
+}
 
 #define TABLE_SIZE 1000
 
@@ -167,31 +173,32 @@ void insert_ConstantTable(char* name, char* type){
         }
 
         void printConstantTable(){
-                printf("| %20s | %20s |\n", "CONSTANT","TYPE");
+                printf("\n┌────────────────────────┬────────────────────────┐\n");
+                printf("│ %-20s │ %-20s │\n", "CONSTANT", "TYPE");
+                printf("├────────────────────────┼────────────────────────┤\n");
                 for(int i = 0; i < TABLE_SIZE; ++i){
                         if(CT[i].exist == 0)
                                 continue;
-
-                        printf("| %20s | %20s |\n", CT[i].constant_name, CT[i].constant_type);
+                        printf("│ %-20s │ %-20s │\n", CT[i].constant_name, CT[i].constant_type);
                 }
+                printf("└────────────────────────┴────────────────────────┘\n");
         }
 
         void printSymbolTable(){
-        printf("| %10s | %10s | %18s | %15s | %15s | %30s | %10s |\n","SYMBOL NAME", "TYPE", "CLASS","DIMENSIONS","PARAMETERS","PROCEDURE DEFINITION FLAG","NESTING_LEVEL");
+                printf("\n┌────────────┬──────────┬──────────┬───────────┬──────────┐\n");
+                printf("│ %-10s │ %-8s │ %-8s │ %-9s │ %-8s │\n", "SYMBOL", "TYPE", "CLASS", "SCOPE", "LINE");
+                printf("├────────────┼──────────┼──────────┼───────────┼──────────┤\n");
                 for(int i = 0; i < TABLE_SIZE; ++i){
                         if(ST[i].exist == 0)
                                 continue;
-                        printf("| %11s | %10s | %18s | %15s | %15s | %30s |            %d  |\n", ST[i].symbol_name, ST[i].symbol_type, ST[i].class,ST[i].array_dimensions,ST[i].parameters,ST[i].pdl, ST[i].nesting_level);
+                        printf("│ %-10s │ %-8s │ %-8s │ %-9d │ %-8d │\n", 
+                               ST[i].symbol_name, 
+                               ST[i].symbol_type, 
+                               ST[i].class,
+                               ST[i].nesting_level,
+                               ST[i].line_number);
                 }
-        }
-
-        void printSymbolDataLine(){
-        printf("| %10s |  %10s | %10s |\n","SYMBOL", "TYPE","LINE NO");
-                for(int i = 0; i < TABLE_SIZE; ++i){
-                        if(ST[i].exist == 0)
-                                continue;
-                        printf("| %10s | %11s |        %d   |\n", ST[i].symbol_name, ST[i].symbol_type, ST[i].line_number);
-                }
+                printf("└────────────┴──────────┴──────────┴───────────┴──────────┘\n");
         }
 
         char current_identifier[20];
@@ -202,6 +209,10 @@ void insert_ConstantTable(char* name, char* type){
         extern int flag;
 
 %}
+
+%option noyywrap
+%option noinput
+%option nounput
 
 num                     [0-9]
 alpha                   [a-zA-Z]
